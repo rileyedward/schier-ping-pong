@@ -486,57 +486,77 @@ function submitFriendly() {
                 </CardContent>
             </Card>
 
-            <!-- Leagues + standings -->
+            <!-- Season standings -->
             <Card>
-                <CardHeader><CardTitle>Leagues</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Standings</CardTitle></CardHeader>
                 <CardContent class="space-y-4">
                     <p v-if="!leagues.length" class="text-sm text-neutral-500">No active leagues.</p>
-                    <div v-if="leagues.length" class="flex flex-wrap gap-2">
+
+                    <!-- League tabs -->
+                    <div v-if="leagues.length" class="flex flex-wrap gap-2 border-b pb-3">
                         <button
                             v-for="l in leagues"
                             :key="l.id"
-                            class="rounded-md border px-3 py-1 text-sm"
-                            :class="activeLeagueId === l.id ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : ''"
+                            class="rounded-md px-3 py-1 text-sm font-medium transition-colors"
+                            :class="activeLeagueId === l.id
+                                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                                : 'border hover:bg-neutral-100 dark:hover:bg-neutral-800'"
                             @click="activeLeagueId = l.id"
                         >
                             {{ l.name }}
                         </button>
                     </div>
-                    <div v-if="activeLeague" class="space-y-3">
-                        <div class="flex flex-wrap gap-2">
-                            <button
-                                v-for="s in activeLeague.seasons"
-                                :key="s.id"
-                                class="rounded-md border px-2 py-1 text-xs"
-                                :class="activeSeasonByLeague[activeLeague.id] === s.id ? 'bg-neutral-200 dark:bg-neutral-700' : ''"
-                                @click="activeSeasonByLeague[activeLeague.id] = s.id"
+
+                    <div v-if="activeLeague" class="space-y-4">
+                        <!-- Season dropdown -->
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm font-medium text-neutral-600 dark:text-neutral-400 shrink-0">Season</label>
+                            <select
+                                v-model.number="activeSeasonByLeague[activeLeague.id]"
+                                class="flex h-9 flex-1 rounded-md border bg-transparent px-2 text-sm"
                             >
-                                {{ s.name }}
-                            </button>
+                                <option v-for="s in activeLeague.seasons" :key="s.id" :value="s.id">
+                                    {{ s.name }}
+                                    <template v-if="s.start_date"> ({{ s.start_date.slice(0, 4) }})</template>
+                                </option>
+                            </select>
                         </div>
+
+                        <!-- Standings table -->
                         <div v-if="activeSeason">
-                            <div class="mb-2 text-xs text-neutral-500">
-                                <span v-if="activeSeason.start_date">{{ activeSeason.start_date }}</span>
-                                <span v-if="activeSeason.end_date"> → {{ activeSeason.end_date }}</span>
+                            <div class="mb-2 flex items-center justify-between text-xs text-neutral-500">
+                                <span class="capitalize">{{ activeSeason.format }}</span>
+                                <span v-if="activeSeason.start_date">
+                                    {{ activeSeason.start_date }}
+                                    <template v-if="activeSeason.end_date"> – {{ activeSeason.end_date }}</template>
+                                </span>
                             </div>
                             <table class="w-full text-sm">
-                                <thead class="text-left text-xs text-neutral-500">
-                                    <tr>
-                                        <th class="py-1">#</th>
-                                        <th>{{ activeSeason?.format === 'doubles' ? 'Team' : 'Player' }}</th>
-                                        <th class="text-right">W</th>
-                                        <th class="text-right">L</th>
+                                <thead>
+                                    <tr class="border-b text-left text-xs font-medium text-neutral-500">
+                                        <th class="py-2 w-8">#</th>
+                                        <th class="py-2">{{ activeSeason.format === 'doubles' ? 'Team' : 'Player' }}</th>
+                                        <th class="py-2 text-right w-10">W</th>
+                                        <th class="py-2 text-right w-10">L</th>
+                                        <th class="py-2 text-right w-16">Win%</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(r, i) in activeSeason.standings" :key="r.id" class="border-t">
-                                        <td class="py-1">{{ i + 1 }}</td>
-                                        <td>{{ r.name }}</td>
-                                        <td class="text-right">{{ r.wins }}</td>
-                                        <td class="text-right">{{ r.losses }}</td>
+                                    <tr
+                                        v-for="(r, i) in activeSeason.standings"
+                                        :key="r.id"
+                                        class="border-b last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
+                                    >
+                                        <td class="py-2 text-neutral-400 text-xs">{{ i + 1 }}</td>
+                                        <td class="py-2 font-medium">{{ r.name }}</td>
+                                        <td class="py-2 text-right text-emerald-600 dark:text-emerald-400 font-semibold">{{ r.wins }}</td>
+                                        <td class="py-2 text-right text-red-500 dark:text-red-400">{{ r.losses }}</td>
+                                        <td class="py-2 text-right text-neutral-500 text-xs">
+                                            {{ r.wins + r.losses > 0 ? Math.round(r.wins / (r.wins + r.losses) * 100) + '%' : '—' }}
+                                        </td>
                                     </tr>
                                     <tr v-if="!activeSeason.standings.length">
-                                        <td colspan="4" class="py-2 text-center text-xs text-neutral-500">
+                                        <td colspan="5" class="py-4 text-center text-xs text-neutral-500">
                                             No standings yet.
                                         </td>
                                     </tr>
