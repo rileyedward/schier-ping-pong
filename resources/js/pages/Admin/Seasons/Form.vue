@@ -14,6 +14,7 @@ type Season = {
     description: string | null;
     start_date: string;
     end_date: string;
+    format: 'singles' | 'doubles';
 } | null;
 
 const props = defineProps<{
@@ -30,6 +31,7 @@ const form = useForm({
     description: props.season?.description ?? '',
     start_date: props.season?.start_date ?? '',
     end_date: props.season?.end_date ?? '',
+    format: props.season?.format ?? 'singles' as 'singles' | 'doubles',
 });
 
 defineOptions({
@@ -87,6 +89,20 @@ function submit() {
                             <Input id="end_date" type="date" v-model="form.end_date" />
                             <InputError :message="form.errors.end_date" />
                         </div>
+                    </div>
+                    <div>
+                        <Label>Season format</Label>
+                        <div class="mt-2 flex gap-4 text-sm">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" value="singles" v-model="form.format" />
+                                Singles
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" value="doubles" v-model="form.format" />
+                                Doubles
+                            </label>
+                        </div>
+                        <InputError :message="form.errors.format" />
                     </div>
                     <div>
                         <Label for="description">Description</Label>

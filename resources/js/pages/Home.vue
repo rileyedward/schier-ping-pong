@@ -14,9 +14,14 @@ type RecentMatch = {
     played_at: string | null;
     player_one: PlayerSummary | null;
     player_two: PlayerSummary | null;
+    team_one: string | null;
+    team_two: string | null;
+    team_one_id: number | null;
+    team_two_id: number | null;
     games_won_by_one: number | null;
     games_won_by_two: number | null;
     winner_id: number | null;
+    winner_team_id: number | null;
 };
 type TopPlayer = {
     id: number;
@@ -29,6 +34,7 @@ type Standing = { id: number; name: string; wins: number; losses: number };
 type SeasonBlock = {
     id: number;
     name: string;
+    format: 'singles' | 'doubles';
     start_date: string | null;
     end_date: string | null;
     standings: Standing[];
@@ -38,10 +44,14 @@ type UpcomingMatch = {
     id: number;
     scheduled_for: string | null;
     best_of: number;
-    player_one_id: number;
-    player_two_id: number;
-    player_one: string;
-    player_two: string;
+    player_one_id: number | null;
+    player_two_id: number | null;
+    player_one: string | null;
+    player_two: string | null;
+    team_one_id: number | null;
+    team_two_id: number | null;
+    team_one: string | null;
+    team_two: string | null;
     season_label: string | null;
 };
 type PlayerOption = { id: number; name: string };
@@ -89,13 +99,18 @@ const leagueGamesOptions = computed(() => {
     for (let n = leagueWinTarget.value; n <= selectedMatch.value.best_of; n++) out.push(n);
     return out;
 });
-const leagueForm = useForm({ winner_id: 0, games_played: 0 });
+const leagueForm = useForm({ winner_id: 0, winner_team_id: 0, games_played: 0 });
+const selectedMatchIsDoubles = computed(() => !!selectedMatch.value?.team_one_id);
 
 function pickLeagueMatch(id: number) {
     selectedMatchId.value = id;
     const m = props.upcomingMatches.find((x) => x.id === id);
     if (m) {
-        leagueForm.winner_id = m.player_one_id;
+        if (m.team_one_id) {
+            leagueForm.winner_team_id = m.team_one_id;
+        } else {
+            leagueForm.winner_id = m.player_one_id ?? 0;
+        }
         leagueForm.games_played = Math.floor(m.best_of / 2) + 1;
         leagueForm.clearErrors();
     }
@@ -113,8 +128,12 @@ function submitLeague() {
 }
 
 const friendlyForm = useForm({
+    is_doubles: false,
     player_one_id: 0,
     player_two_id: 0,
+    team_one_player_ids: [0, 0] as [number, number],
+    team_two_player_ids: [0, 0] as [number, number],
+    winner_side: 'one' as 'one' | 'two',
     best_of: 3,
     winner_id: 0,
     games_played: 2,
@@ -135,6 +154,8 @@ function submitFriendly() {
                 friendlyForm.reset();
                 friendlyForm.best_of = 3;
                 friendlyForm.games_played = 2;
+                friendlyForm.team_one_player_ids = [0, 0];
+                friendlyForm.team_two_player_ids = [0, 0];
                 inputMode.value = 'choose';
             },
         },
@@ -167,25 +188,32 @@ function submitFriendly() {
                         class="flex items-center justify-between rounded-md border p-3"
                     >
                         <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold dark:bg-neutral-700"
-                                    :class="m.winner_id === m.player_one?.id ? 'ring-2 ring-emerald-500' : ''"
-                                >
-                                    {{ m.player_one?.initials ?? '—' }}
+                            <template v-if="m.team_one">
+                                <span class="text-sm font-medium" :class="m.winner_team_id === m.team_one_id ? 'text-emerald-600 dark:text-emerald-400' : ''">{{ m.team_one }}</span>
+                                <span class="text-xs text-neutral-500">vs</span>
+                                <span class="text-sm font-medium" :class="m.winner_team_id === m.team_two_id ? 'text-emerald-600 dark:text-emerald-400' : ''">{{ m.team_two }}</span>
+                            </template>
+                            <template v-else>
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold dark:bg-neutral-700"
+                                        :class="m.winner_id === m.player_one?.id ? 'ring-2 ring-emerald-500' : ''"
+                                    >
+                                        {{ m.player_one?.initials ?? '—' }}
+                                    </div>
+                                    <span class="text-sm">{{ m.player_one?.name ?? '—' }}</span>
                                 </div>
-                                <span class="text-sm">{{ m.player_one?.name ?? '—' }}</span>
-                            </div>
-                            <span class="text-xs text-neutral-500">vs</span>
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold dark:bg-neutral-700"
-                                    :class="m.winner_id === m.player_two?.id ? 'ring-2 ring-emerald-500' : ''"
-                                >
-                                    {{ m.player_two?.initials ?? '—' }}
+                                <span class="text-xs text-neutral-500">vs</span>
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold dark:bg-neutral-700"
+                                        :class="m.winner_id === m.player_two?.id ? 'ring-2 ring-emerald-500' : ''"
+                                    >
+                                        {{ m.player_two?.initials ?? '—' }}
+                                    </div>
+                                    <span class="text-sm">{{ m.player_two?.name ?? '—' }}</span>
                                 </div>
-                                <span class="text-sm">{{ m.player_two?.name ?? '—' }}</span>
-                            </div>
+                            </template>
                         </div>
                         <div class="text-right">
                             <div class="text-sm font-semibold">
@@ -222,7 +250,7 @@ function submitFriendly() {
                         >
                             <option :value="null">Select a match…</option>
                             <option v-for="m in upcomingMatches" :key="m.id" :value="m.id">
-                                {{ m.player_one }} vs {{ m.player_two }}
+                                {{ m.team_one ? m.team_one + ' vs ' + m.team_two : m.player_one + ' vs ' + m.player_two }}
                                 <template v-if="m.season_label"> · {{ m.season_label }}</template>
                             </option>
                         </select>
@@ -231,16 +259,29 @@ function submitFriendly() {
                             <div>
                                 <Label>Winner</Label>
                                 <div class="mt-2 space-y-2 text-sm">
-                                    <label class="flex items-center gap-2">
-                                        <input type="radio" :value="selectedMatch.player_one_id" v-model="leagueForm.winner_id" />
-                                        {{ selectedMatch.player_one }}
-                                    </label>
-                                    <label class="flex items-center gap-2">
-                                        <input type="radio" :value="selectedMatch.player_two_id" v-model="leagueForm.winner_id" />
-                                        {{ selectedMatch.player_two }}
-                                    </label>
+                                    <template v-if="selectedMatchIsDoubles">
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" :value="selectedMatch.team_one_id" v-model="leagueForm.winner_team_id" />
+                                            {{ selectedMatch.team_one }}
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" :value="selectedMatch.team_two_id" v-model="leagueForm.winner_team_id" />
+                                            {{ selectedMatch.team_two }}
+                                        </label>
+                                    </template>
+                                    <template v-else>
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" :value="selectedMatch.player_one_id" v-model="leagueForm.winner_id" />
+                                            {{ selectedMatch.player_one }}
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" :value="selectedMatch.player_two_id" v-model="leagueForm.winner_id" />
+                                            {{ selectedMatch.player_two }}
+                                        </label>
+                                    </template>
                                 </div>
                                 <InputError :message="leagueForm.errors.winner_id" />
+                                <InputError :message="leagueForm.errors.winner_team_id" />
                             </div>
                             <div>
                                 <Label>In how many games did the winner win?</Label>
@@ -264,30 +305,126 @@ function submitFriendly() {
                             <button class="text-xs underline" @click="inputMode = 'choose'">Back</button>
                         </div>
                         <form class="space-y-4" @submit.prevent="submitFriendly">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <Label>Player 1</Label>
-                                    <select
-                                        v-model.number="friendlyForm.player_one_id"
-                                        class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
-                                    >
-                                        <option :value="0">Select…</option>
-                                        <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                    </select>
-                                    <InputError :message="friendlyForm.errors.player_one_id" />
-                                </div>
-                                <div>
-                                    <Label>Player 2</Label>
-                                    <select
-                                        v-model.number="friendlyForm.player_two_id"
-                                        class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
-                                    >
-                                        <option :value="0">Select…</option>
-                                        <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                    </select>
-                                    <InputError :message="friendlyForm.errors.player_two_id" />
-                                </div>
+                            <!-- Doubles toggle -->
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="is_doubles" v-model="friendlyForm.is_doubles" class="h-4 w-4" />
+                                <Label for="is_doubles" class="cursor-pointer">Doubles match</Label>
                             </div>
+
+                            <!-- Singles player pickers -->
+                            <template v-if="!friendlyForm.is_doubles">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Label>Player 1</Label>
+                                        <select
+                                            v-model.number="friendlyForm.player_one_id"
+                                            class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                        >
+                                            <option :value="0">Select…</option>
+                                            <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                        </select>
+                                        <InputError :message="friendlyForm.errors.player_one_id" />
+                                    </div>
+                                    <div>
+                                        <Label>Player 2</Label>
+                                        <select
+                                            v-model.number="friendlyForm.player_two_id"
+                                            class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                        >
+                                            <option :value="0">Select…</option>
+                                            <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                        </select>
+                                        <InputError :message="friendlyForm.errors.player_two_id" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label>Winner</Label>
+                                    <select
+                                        v-model.number="friendlyForm.winner_id"
+                                        class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                    >
+                                        <option :value="0">Select…</option>
+                                        <option v-if="friendlyForm.player_one_id" :value="friendlyForm.player_one_id">
+                                            {{ allPlayers.find((p) => p.id === friendlyForm.player_one_id)?.name }}
+                                        </option>
+                                        <option v-if="friendlyForm.player_two_id" :value="friendlyForm.player_two_id">
+                                            {{ allPlayers.find((p) => p.id === friendlyForm.player_two_id)?.name }}
+                                        </option>
+                                    </select>
+                                    <InputError :message="friendlyForm.errors.winner_id" />
+                                </div>
+                            </template>
+
+                            <!-- Doubles team pickers -->
+                            <template v-else>
+                                <div>
+                                    <div class="mb-1 text-sm font-medium">Team 1</div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <Label class="text-xs">Player A</Label>
+                                            <select
+                                                v-model.number="friendlyForm.team_one_player_ids[0]"
+                                                class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                            >
+                                                <option :value="0">Select…</option>
+                                                <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <Label class="text-xs">Player B</Label>
+                                            <select
+                                                v-model.number="friendlyForm.team_one_player_ids[1]"
+                                                class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                            >
+                                                <option :value="0">Select…</option>
+                                                <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <InputError :message="friendlyForm.errors.team_one_player_ids" />
+                                </div>
+                                <div>
+                                    <div class="mb-1 text-sm font-medium">Team 2</div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <Label class="text-xs">Player A</Label>
+                                            <select
+                                                v-model.number="friendlyForm.team_two_player_ids[0]"
+                                                class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                            >
+                                                <option :value="0">Select…</option>
+                                                <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <Label class="text-xs">Player B</Label>
+                                            <select
+                                                v-model.number="friendlyForm.team_two_player_ids[1]"
+                                                class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
+                                            >
+                                                <option :value="0">Select…</option>
+                                                <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <InputError :message="friendlyForm.errors.team_two_player_ids" />
+                                </div>
+                                <div>
+                                    <Label>Winning team</Label>
+                                    <div class="mt-2 space-y-2 text-sm">
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" value="one" v-model="friendlyForm.winner_side" />
+                                            Team 1
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" value="two" v-model="friendlyForm.winner_side" />
+                                            Team 2
+                                        </label>
+                                    </div>
+                                    <InputError :message="friendlyForm.errors.winner_side" />
+                                </div>
+                            </template>
+
                             <div>
                                 <Label>Best of</Label>
                                 <select
@@ -298,28 +435,6 @@ function submitFriendly() {
                                     <option :value="5">5</option>
                                     <option :value="7">7</option>
                                 </select>
-                            </div>
-                            <div>
-                                <Label>Winner</Label>
-                                <select
-                                    v-model.number="friendlyForm.winner_id"
-                                    class="mt-1 flex h-9 w-full rounded-md border bg-transparent px-2 text-sm"
-                                >
-                                    <option :value="0">Select…</option>
-                                    <option
-                                        v-if="friendlyForm.player_one_id"
-                                        :value="friendlyForm.player_one_id"
-                                    >
-                                        {{ allPlayers.find((p) => p.id === friendlyForm.player_one_id)?.name }}
-                                    </option>
-                                    <option
-                                        v-if="friendlyForm.player_two_id"
-                                        :value="friendlyForm.player_two_id"
-                                    >
-                                        {{ allPlayers.find((p) => p.id === friendlyForm.player_two_id)?.name }}
-                                    </option>
-                                </select>
-                                <InputError :message="friendlyForm.errors.winner_id" />
                             </div>
                             <div>
                                 <Label>In how many games did the winner win?</Label>
@@ -401,7 +516,7 @@ function submitFriendly() {
                                 <thead class="text-left text-xs text-neutral-500">
                                     <tr>
                                         <th class="py-1">#</th>
-                                        <th>Player</th>
+                                        <th>{{ activeSeason?.format === 'doubles' ? 'Team' : 'Player' }}</th>
                                         <th class="text-right">W</th>
                                         <th class="text-right">L</th>
                                     </tr>

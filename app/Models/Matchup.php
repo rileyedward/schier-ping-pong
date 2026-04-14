@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'type', 'season_id', 'player_one_id', 'player_two_id',
+    'team_one_id', 'team_two_id',
     'scheduled_for', 'played_at', 'best_of',
-    'games_won_by_one', 'games_won_by_two', 'winner_id',
+    'games_won_by_one', 'games_won_by_two', 'winner_id', 'winner_team_id',
 ])]
 class Matchup extends Model
 {
@@ -46,5 +47,25 @@ class Matchup extends Model
     public function winner(): BelongsTo
     {
         return $this->belongsTo(Player::class, 'winner_id');
+    }
+
+    public function teamOne(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'team_one_id');
+    }
+
+    public function teamTwo(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'team_two_id');
+    }
+
+    public function winnerTeam(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'winner_team_id');
+    }
+
+    public function isDoubles(): bool
+    {
+        return $this->team_one_id !== null;
     }
 }

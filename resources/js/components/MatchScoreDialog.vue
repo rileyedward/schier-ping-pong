@@ -16,10 +16,14 @@ import InputError from '@/components/InputError.vue';
 type MatchInput = {
     id: number;
     best_of: number;
-    player_one_id: number;
-    player_two_id: number;
-    player_one: string;
-    player_two: string;
+    player_one_id: number | null;
+    player_two_id: number | null;
+    player_one: string | null;
+    player_two: string | null;
+    team_one_id: number | null;
+    team_two_id: number | null;
+    team_one: string | null;
+    team_two: string | null;
 };
 
 const props = defineProps<{
@@ -32,8 +36,11 @@ const emit = defineEmits<{
     (e: 'recorded'): void;
 }>();
 
+const isDoubles = computed(() => !!props.match?.team_one_id);
+
 const form = useForm({
     winner_id: 0,
+    winner_team_id: 0,
     games_played: 0,
 });
 
@@ -49,7 +56,11 @@ watch(
     () => props.open,
     (open) => {
         if (open && props.match) {
-            form.winner_id = props.match.player_one_id;
+            if (isDoubles.value) {
+                form.winner_team_id = props.match.team_one_id ?? 0;
+            } else {
+                form.winner_id = props.match.player_one_id ?? 0;
+            }
             form.games_played = winTarget.value;
             form.clearErrors();
         }
@@ -78,7 +89,9 @@ function setOpen(value: boolean) {
             <DialogHeader>
                 <DialogTitle>Input match score</DialogTitle>
                 <DialogDescription>
-                    {{ match.player_one }} vs {{ match.player_two }} · Best of {{ match.best_of }}
+                    <template v-if="match.team_one">{{ match.team_one }} vs {{ match.team_two }}</template>
+                    <template v-else>{{ match.player_one }} vs {{ match.player_two }}</template>
+                    · Best of {{ match.best_of }}
                 </DialogDescription>
             </DialogHeader>
 
@@ -86,16 +99,31 @@ function setOpen(value: boolean) {
                 <div>
                     <Label>Winner</Label>
                     <div class="mt-2 space-y-2">
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="radio" :value="match.player_one_id" v-model="form.winner_id" />
-                            {{ match.player_one }}
-                        </label>
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="radio" :value="match.player_two_id" v-model="form.winner_id" />
-                            {{ match.player_two }}
-                        </label>
+                        <!-- Doubles: pick winning team -->
+                        <template v-if="isDoubles">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" :value="match.team_one_id" v-model="form.winner_team_id" />
+                                {{ match.team_one }}
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" :value="match.team_two_id" v-model="form.winner_team_id" />
+                                {{ match.team_two }}
+                            </label>
+                        </template>
+                        <!-- Singles: pick winning player -->
+                        <template v-else>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" :value="match.player_one_id" v-model="form.winner_id" />
+                                {{ match.player_one }}
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" :value="match.player_two_id" v-model="form.winner_id" />
+                                {{ match.player_two }}
+                            </label>
+                        </template>
                     </div>
                     <InputError :message="form.errors.winner_id" />
+                    <InputError :message="form.errors.winner_team_id" />
                 </div>
 
                 <div>

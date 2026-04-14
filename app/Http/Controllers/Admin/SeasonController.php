@@ -60,6 +60,7 @@ class SeasonController extends Controller
                 'description' => $season->description,
                 'start_date' => $season->start_date?->toDateString(),
                 'end_date' => $season->end_date?->toDateString(),
+                'format' => $season->format,
                 'league' => $season->league,
             ],
             'roster' => $season->players()
@@ -69,8 +70,24 @@ class SeasonController extends Controller
                 ->whereDoesntHave('seasons', fn ($q) => $q->where('seasons.id', $season->id))
                 ->orderBy('last_name')
                 ->get(['id', 'first_name', 'last_name']),
+            'teams' => $season->teams()
+                ->with('players:id,first_name,last_name')
+                ->get()
+                ->map(fn ($t) => [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'players' => $t->players->map(fn ($p) => [
+                        'id' => $p->id,
+                        'name' => trim($p->first_name.' '.$p->last_name),
+                    ])->values(),
+                ]),
             'matches' => $season->matches()
-                ->with(['playerOne:id,first_name,last_name', 'playerTwo:id,first_name,last_name'])
+                ->with([
+                    'playerOne:id,first_name,last_name',
+                    'playerTwo:id,first_name,last_name',
+                    'teamOne',
+                    'teamTwo',
+                ])
                 ->orderBy('scheduled_for')
                 ->orderBy('id')
                 ->get()
@@ -80,8 +97,13 @@ class SeasonController extends Controller
                     'best_of' => $m->best_of,
                     'player_one_id' => $m->player_one_id,
                     'player_two_id' => $m->player_two_id,
-                    'player_one' => trim($m->playerOne->first_name.' '.$m->playerOne->last_name),
-                    'player_two' => trim($m->playerTwo->first_name.' '.$m->playerTwo->last_name),
+                    'player_one' => $m->playerOne ? trim($m->playerOne->first_name.' '.$m->playerOne->last_name) : null,
+                    'player_two' => $m->playerTwo ? trim($m->playerTwo->first_name.' '.$m->playerTwo->last_name) : null,
+                    'team_one_id' => $m->team_one_id,
+                    'team_two_id' => $m->team_two_id,
+                    'team_one' => $m->teamOne?->name,
+                    'team_two' => $m->teamTwo?->name,
+                    'winner_team_id' => $m->winner_team_id,
                     'played_at' => $m->played_at?->toDateTimeString(),
                 ]),
         ]);
@@ -97,6 +119,7 @@ class SeasonController extends Controller
                 'description' => $season->description,
                 'start_date' => $season->start_date?->toDateString(),
                 'end_date' => $season->end_date?->toDateString(),
+                'format' => $season->format,
             ],
             'leagues' => League::orderBy('name')->get(['id', 'name']),
             'preselectedLeagueId' => null,
@@ -105,7 +128,13 @@ class SeasonController extends Controller
 
     public function update(UpdateSeasonRequest $request, Season $season): RedirectResponse
     {
-        $season->update($request->validated());
+        $validated = $request->validated();
+
+        if ($season->format !== $validated['format'] && $season->teams()->exists()) {
+            return back()->withErrors(['format' => 'Cannot change format after teams have been created.']);
+        }
+
+        $season->update($validated);
 
         return redirect()->route('admin.seasons.show', $season)->with('status', 'Season updated.');
     }

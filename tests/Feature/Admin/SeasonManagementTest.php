@@ -20,6 +20,7 @@ it('creates a season and auto-attaches league players', function () {
         'description' => null,
         'start_date' => '2026-04-01',
         'end_date' => '2026-05-31',
+        'format' => 'singles',
     ])->assertRedirect();
 
     $season = Season::where('name', 'Spring 2026')->firstOrFail();

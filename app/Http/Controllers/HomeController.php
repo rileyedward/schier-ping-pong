@@ -14,7 +14,12 @@ class HomeController extends Controller
     {
         $recent = Matchup::query()
             ->whereNotNull('played_at')
-            ->with(['playerOne:id,first_name,last_name', 'playerTwo:id,first_name,last_name'])
+            ->with([
+                'playerOne:id,first_name,last_name',
+                'playerTwo:id,first_name,last_name',
+                'teamOne',
+                'teamTwo',
+            ])
             ->orderByDesc('played_at')
             ->limit(8)
             ->get()
@@ -24,9 +29,14 @@ class HomeController extends Controller
                 'played_at' => $m->played_at?->toDateTimeString(),
                 'player_one' => $this->playerSummary($m->playerOne),
                 'player_two' => $this->playerSummary($m->playerTwo),
+                'team_one' => $m->teamOne?->name,
+                'team_two' => $m->teamTwo?->name,
+                'team_one_id' => $m->team_one_id,
+                'team_two_id' => $m->team_two_id,
                 'games_won_by_one' => $m->games_won_by_one,
                 'games_won_by_two' => $m->games_won_by_two,
                 'winner_id' => $m->winner_id,
+                'winner_team_id' => $m->winner_team_id,
             ]);
 
         $weekAgo = now()->subWeek();
@@ -62,28 +72,50 @@ class HomeController extends Controller
                     'id' => $league->id,
                     'name' => $league->name,
                     'seasons' => $league->seasons->map(function ($season) {
-                        $matches = $season->matches()->whereNotNull('winner_id')->get();
-                        $players = $season->players()->get(['players.id', 'first_name', 'last_name']);
+                        if ($season->isDoubles()) {
+                            $matches = $season->matches()->whereNotNull('winner_team_id')->get();
+                            $teams = $season->teams()->with('players:id,first_name,last_name')->get();
 
-                        $standings = $players->map(function ($p) use ($matches) {
-                            $wins = $matches->where('winner_id', $p->id)->count();
-                            $losses = $matches->filter(
-                                fn ($m) => ($m->player_one_id === $p->id || $m->player_two_id === $p->id) && $m->winner_id !== $p->id,
-                            )->count();
+                            $standings = $teams->map(function ($team) use ($matches) {
+                                $wins = $matches->where('winner_team_id', $team->id)->count();
+                                $losses = $matches->filter(
+                                    fn ($m) => ($m->team_one_id === $team->id || $m->team_two_id === $team->id) && $m->winner_team_id !== $team->id,
+                                )->count();
 
-                            return [
-                                'id' => $p->id,
-                                'name' => trim($p->first_name.' '.$p->last_name),
-                                'wins' => $wins,
-                                'losses' => $losses,
-                            ];
-                        })
-                            ->sortByDesc(fn ($r) => $r['wins'] - $r['losses'])
-                            ->values();
+                                return [
+                                    'id' => $team->id,
+                                    'name' => $team->name,
+                                    'wins' => $wins,
+                                    'losses' => $losses,
+                                ];
+                            })
+                                ->sortByDesc(fn ($r) => $r['wins'] - $r['losses'])
+                                ->values();
+                        } else {
+                            $matches = $season->matches()->whereNotNull('winner_id')->get();
+                            $players = $season->players()->get(['players.id', 'first_name', 'last_name']);
+
+                            $standings = $players->map(function ($p) use ($matches) {
+                                $wins = $matches->where('winner_id', $p->id)->count();
+                                $losses = $matches->filter(
+                                    fn ($m) => ($m->player_one_id === $p->id || $m->player_two_id === $p->id) && $m->winner_id !== $p->id,
+                                )->count();
+
+                                return [
+                                    'id' => $p->id,
+                                    'name' => trim($p->first_name.' '.$p->last_name),
+                                    'wins' => $wins,
+                                    'losses' => $losses,
+                                ];
+                            })
+                                ->sortByDesc(fn ($r) => $r['wins'] - $r['losses'])
+                                ->values();
+                        }
 
                         return [
                             'id' => $season->id,
                             'name' => $season->name,
+                            'format' => $season->format,
                             'start_date' => $season->start_date?->toDateString(),
                             'end_date' => $season->end_date?->toDateString(),
                             'standings' => $standings,
@@ -99,6 +131,8 @@ class HomeController extends Controller
             ->with([
                 'playerOne:id,first_name,last_name',
                 'playerTwo:id,first_name,last_name',
+                'teamOne',
+                'teamTwo',
                 'season:id,name,league_id',
                 'season.league:id,name',
             ])
@@ -111,8 +145,12 @@ class HomeController extends Controller
                 'best_of' => $m->best_of,
                 'player_one_id' => $m->player_one_id,
                 'player_two_id' => $m->player_two_id,
-                'player_one' => trim($m->playerOne->first_name.' '.$m->playerOne->last_name),
-                'player_two' => trim($m->playerTwo->first_name.' '.$m->playerTwo->last_name),
+                'player_one' => $m->playerOne ? trim($m->playerOne->first_name.' '.$m->playerOne->last_name) : null,
+                'player_two' => $m->playerTwo ? trim($m->playerTwo->first_name.' '.$m->playerTwo->last_name) : null,
+                'team_one_id' => $m->team_one_id,
+                'team_two_id' => $m->team_two_id,
+                'team_one' => $m->teamOne?->name,
+                'team_two' => $m->teamTwo?->name,
                 'season_label' => $m->season
                     ? trim(($m->season->league->name ?? '').' · '.$m->season->name)
                     : null,

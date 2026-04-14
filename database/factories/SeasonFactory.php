@@ -21,6 +21,7 @@ class SeasonFactory extends Factory
             'description' => fake()->sentence(),
             'start_date' => $start->toDateString(),
             'end_date' => $start->copy()->addWeeks(6)->toDateString(),
+            'format' => 'singles',
         ];
     }
 }

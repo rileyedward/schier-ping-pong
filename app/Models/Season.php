@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['league_id', 'name', 'description', 'start_date', 'end_date'])]
+#[Fillable(['league_id', 'name', 'description', 'start_date', 'end_date', 'format'])]
 class Season extends Model
 {
     /** @use HasFactory<SeasonFactory> */
@@ -37,5 +37,15 @@ class Season extends Model
     public function matches(): HasMany
     {
         return $this->hasMany(Matchup::class);
+    }
+
+    public function teams(): HasMany
+    {
+        return $this->hasMany(Team::class);
+    }
+
+    public function isDoubles(): bool
+    {
+        return $this->format === 'doubles';
     }
 }

@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\Matchup;
 use App\Models\Player;
 use App\Models\RatingChange;
+use App\Models\Team;
 use App\Services\Rating\UsattRating;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,7 @@ class ApplyMatchRating
 {
     public function __invoke(Matchup $match): void
     {
-        if (! $match->winner_id) {
+        if (! $match->winner_id && ! $match->winner_team_id) {
             return;
         }
 
@@ -20,6 +21,15 @@ class ApplyMatchRating
             return;
         }
 
+        if ($match->isDoubles()) {
+            $this->applyDoubles($match);
+        } else {
+            $this->applySingles($match);
+        }
+    }
+
+    private function applySingles(Matchup $match): void
+    {
         $column = $match->type === 'league' ? 'league_rating' : 'friendly_rating';
 
         $winnerId = $match->winner_id;
@@ -62,6 +72,67 @@ class ApplyMatchRating
                     'created_at' => now(),
                 ],
             ]);
+        });
+    }
+
+    private function applyDoubles(Matchup $match): void
+    {
+        $column = $match->type === 'league' ? 'league_rating' : 'friendly_rating';
+
+        $winnerTeam = Team::with('players')->findOrFail($match->winner_team_id);
+        $loserTeamId = $match->winner_team_id === $match->team_one_id
+            ? $match->team_two_id
+            : $match->team_one_id;
+        $loserTeam = Team::with('players')->findOrFail($loserTeamId);
+
+        DB::transaction(function () use ($match, $winnerTeam, $loserTeam, $column) {
+            $winnerPlayers = Player::lockForUpdate()
+                ->whereIn('id', $winnerTeam->players->pluck('id'))
+                ->get();
+            $loserPlayers = Player::lockForUpdate()
+                ->whereIn('id', $loserTeam->players->pluck('id'))
+                ->get();
+
+            $winnerAvg = (int) round($winnerPlayers->avg($column));
+            $loserAvg = (int) round($loserPlayers->avg($column));
+
+            $delta = UsattRating::delta($winnerAvg, $loserAvg);
+
+            $ratingChanges = [];
+
+            foreach ($winnerPlayers as $player) {
+                $before = (int) $player->{$column};
+                $after = $before + $delta;
+                $player->{$column} = $after;
+                $player->save();
+                $ratingChanges[] = [
+                    'player_id' => $player->id,
+                    'matchup_id' => $match->id,
+                    'type' => $match->type,
+                    'rating_before' => $before,
+                    'rating_after' => $after,
+                    'delta' => $delta,
+                    'created_at' => now(),
+                ];
+            }
+
+            foreach ($loserPlayers as $player) {
+                $before = (int) $player->{$column};
+                $after = max(0, $before - $delta);
+                $player->{$column} = $after;
+                $player->save();
+                $ratingChanges[] = [
+                    'player_id' => $player->id,
+                    'matchup_id' => $match->id,
+                    'type' => $match->type,
+                    'rating_before' => $before,
+                    'rating_after' => $after,
+                    'delta' => -$delta,
+                    'created_at' => now(),
+                ];
+            }
+
+            RatingChange::insert($ratingChanges);
         });
     }
 }
