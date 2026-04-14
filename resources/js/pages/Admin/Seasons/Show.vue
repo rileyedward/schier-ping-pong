@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { Pencil, Trash2, Trophy, UserMinus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -171,7 +172,9 @@ function removeTeam(id: number) {
         <Card>
             <CardHeader class="flex flex-row items-center justify-between">
                 <CardTitle>{{ season.name }}</CardTitle>
-                <Link :href="`/admin/seasons/${season.id}/edit`"><Button size="sm" variant="outline">Edit</Button></Link>
+                <Link :href="`/admin/seasons/${season.id}/edit`">
+                    <Button size="icon-sm" variant="ghost" title="Edit season"><Pencil /></Button>
+                </Link>
             </CardHeader>
             <CardContent class="space-y-1 text-sm">
                 <div><span class="text-muted-foreground">League:</span>
@@ -228,7 +231,7 @@ function removeTeam(id: number) {
                                 {{ t.players.map((p) => p.name).join(' & ') }}
                             </span>
                         </div>
-                        <Button size="sm" variant="ghost" @click="removeTeam(t.id)">Remove</Button>
+                        <Button size="icon-sm" variant="ghost" title="Remove team" @click="removeTeam(t.id)"><Trash2 /></Button>
                     </li>
                     <li v-if="!teams.length" class="py-4 text-center text-muted-foreground">No teams yet.</li>
                 </ul>
@@ -252,8 +255,8 @@ function removeTeam(id: number) {
                     </div>
                     <ul class="divide-y text-sm">
                         <li v-for="m in roster" :key="m.id" class="flex items-center justify-between py-2">
-                            <span>{{ m.first_name }} {{ m.last_name }}</span>
-                            <Button size="sm" variant="ghost" @click="detach(m.id)">Remove</Button>
+                            <Link :href="`/admin/players/${m.id}/edit`" class="underline">{{ m.first_name }} {{ m.last_name }}</Link>
+                            <Button size="icon-sm" variant="ghost" title="Remove from season" @click="detach(m.id)"><UserMinus /></Button>
                         </li>
                         <li v-if="roster.length === 0" class="py-4 text-center text-muted-foreground">No players in this season.</li>
                     </ul>
@@ -350,12 +353,10 @@ function removeTeam(id: number) {
                                         <span v-if="m.played_at"> · played {{ m.played_at }}</span>
                                     </div>
                                 </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <Button size="sm" @click="openScoreDialog(m)">
-                                        {{ m.played_at ? 'Edit score' : 'Input match score' }}
-                                    </Button>
-                                    <Button size="sm" variant="outline" @click="startEdit(m)">Edit</Button>
-                                    <Button size="sm" variant="destructive" @click="removeMatch(m.id)">Remove</Button>
+                                <div class="flex items-center gap-1">
+                                    <Button size="icon-sm" variant="ghost" :title="m.played_at ? 'Edit score' : 'Input match score'" @click="openScoreDialog(m)"><Trophy /></Button>
+                                    <Button size="icon-sm" variant="ghost" title="Edit match" @click="startEdit(m)"><Pencil /></Button>
+                                    <Button size="icon-sm" variant="destructive" title="Remove match" @click="removeMatch(m.id)"><Trash2 /></Button>
                                 </div>
                             </div>
                             <div v-else class="space-y-2 rounded-md border p-3">

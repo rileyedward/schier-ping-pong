@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { Pencil, UserMinus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -43,8 +44,11 @@ function detach(playerId: number) {
 
     <div class="flex h-full flex-1 flex-col gap-4 p-4">
         <Card>
-            <CardHeader>
+            <CardHeader class="flex flex-row items-center justify-between">
                 <CardTitle>{{ league.name }}</CardTitle>
+                <Link :href="`/admin/leagues/${league.id}/edit`">
+                    <Button size="icon-sm" variant="ghost" title="Edit league"><Pencil /></Button>
+                </Link>
             </CardHeader>
             <CardContent class="space-y-2 text-sm">
                 <div><span class="text-muted-foreground">Skill level:</span> {{ league.skill_level ?? '—' }}</div>
@@ -68,8 +72,11 @@ function detach(playerId: number) {
                 </div>
                 <ul class="divide-y text-sm">
                     <li v-for="m in members" :key="m.id" class="flex items-center justify-between py-2">
-                        <span>{{ m.first_name }} {{ m.last_name }} <span class="text-muted-foreground">{{ m.email }}</span></span>
-                        <Button size="sm" variant="ghost" @click="detach(m.id)">Remove</Button>
+                        <span>
+                            <Link :href="`/admin/players/${m.id}/edit`" class="underline">{{ m.first_name }} {{ m.last_name }}</Link>
+                            <span class="text-muted-foreground"> {{ m.email }}</span>
+                        </span>
+                        <Button size="icon-sm" variant="ghost" title="Remove from league" @click="detach(m.id)"><UserMinus /></Button>
                     </li>
                     <li v-if="members.length === 0" class="py-4 text-center text-muted-foreground">No players in this league.</li>
                 </ul>

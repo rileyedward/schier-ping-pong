@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { Pencil, Trash2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -54,14 +55,19 @@ function destroy(id: number) {
                             <td class="py-2">
                                 <Link :href="`/admin/seasons/${s.id}`" class="underline">{{ s.name }}</Link>
                             </td>
-                            <td class="py-2">{{ s.league?.name ?? '—' }}</td>
+                            <td class="py-2">
+                                <Link v-if="s.league" :href="`/admin/leagues/${s.league.id}`" class="underline">{{ s.league.name }}</Link>
+                                <span v-else>—</span>
+                            </td>
                             <td class="py-2">{{ s.start_date }} → {{ s.end_date }}</td>
                             <td class="py-2">{{ s.players_count }}</td>
-                            <td class="py-2 text-right">
-                                <Link :href="`/admin/seasons/${s.id}/edit`">
-                                    <Button size="sm" variant="outline">Edit</Button>
-                                </Link>
-                                <Button size="sm" variant="destructive" class="ml-2" @click="destroy(s.id)">Delete</Button>
+                            <td class="py-2">
+                                <div class="flex items-center justify-end gap-1">
+                                    <Link :href="`/admin/seasons/${s.id}/edit`">
+                                        <Button size="icon-sm" variant="ghost" title="Edit season"><Pencil /></Button>
+                                    </Link>
+                                    <Button size="icon-sm" variant="destructive" title="Delete season" @click="destroy(s.id)"><Trash2 /></Button>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="seasons.length === 0">

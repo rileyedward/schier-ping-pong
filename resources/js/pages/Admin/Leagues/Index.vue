@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { Pencil, Trash2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -48,11 +49,13 @@ function destroy(id: number) {
                             </td>
                             <td class="py-2">{{ l.skill_level ?? '—' }}</td>
                             <td class="py-2">{{ l.players_count }}</td>
-                            <td class="py-2 text-right">
-                                <Link :href="`/admin/leagues/${l.id}/edit`">
-                                    <Button size="sm" variant="outline">Edit</Button>
-                                </Link>
-                                <Button size="sm" variant="destructive" class="ml-2" @click="destroy(l.id)">Delete</Button>
+                            <td class="py-2">
+                                <div class="flex items-center justify-end gap-1">
+                                    <Link :href="`/admin/leagues/${l.id}/edit`">
+                                        <Button size="icon-sm" variant="ghost" title="Edit league"><Pencil /></Button>
+                                    </Link>
+                                    <Button size="icon-sm" variant="destructive" title="Delete league" @click="destroy(l.id)"><Trash2 /></Button>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="leagues.length === 0">

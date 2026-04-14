@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -271,8 +271,14 @@ function dateLabel(m: MatchRow): { text: string; pending: boolean } {
                                 <td class="py-2 pr-4 text-xs text-muted-foreground">
                                     {{ m.is_doubles ? 'Doubles' : 'Singles' }}
                                 </td>
-                                <td class="py-2 pr-4 font-medium">{{ sideOne(m) }}</td>
-                                <td class="py-2 pr-4 font-medium">{{ sideTwo(m) }}</td>
+                                <td class="py-2 pr-4 font-medium">
+                                    <Link v-if="!m.is_doubles && m.player_one" :href="`/admin/players/${m.player_one.id}/edit`" class="underline">{{ m.player_one.name }}</Link>
+                                    <span v-else>{{ sideOne(m) }}</span>
+                                </td>
+                                <td class="py-2 pr-4 font-medium">
+                                    <Link v-if="!m.is_doubles && m.player_two" :href="`/admin/players/${m.player_two.id}/edit`" class="underline">{{ m.player_two.name }}</Link>
+                                    <span v-else>{{ sideTwo(m) }}</span>
+                                </td>
                                 <td class="py-2 pr-4 text-center font-mono">
                                     <span v-if="m.games_won_by_one != null">
                                         {{ m.games_won_by_one }}–{{ m.games_won_by_two }}
@@ -285,8 +291,14 @@ function dateLabel(m: MatchRow): { text: string; pending: boolean } {
                                     </span>
                                     <span v-else class="text-muted-foreground">—</span>
                                 </td>
-                                <td class="py-2 pr-4 text-xs text-muted-foreground">{{ m.league?.name ?? '—' }}</td>
-                                <td class="py-2 text-xs text-muted-foreground">{{ m.season?.name ?? '—' }}</td>
+                                <td class="py-2 pr-4 text-xs text-muted-foreground">
+                                    <Link v-if="m.league" :href="`/admin/leagues/${m.league.id}`" class="underline">{{ m.league.name }}</Link>
+                                    <span v-else>—</span>
+                                </td>
+                                <td class="py-2 text-xs text-muted-foreground">
+                                    <Link v-if="m.season" :href="`/admin/seasons/${m.season.id}`" class="underline">{{ m.season.name }}</Link>
+                                    <span v-else>—</span>
+                                </td>
                             </tr>
                             <tr v-if="!filtered.length">
                                 <td colspan="9" class="py-6 text-center text-muted-foreground">No matches found.</td>
