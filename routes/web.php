@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\LeagueController;
+use App\Http\Controllers\Admin\MatchupIndexController;
 use App\Http\Controllers\Admin\MatchupController;
 use App\Http\Controllers\Admin\PlayerController as AdminPlayerController;
 use App\Http\Controllers\Admin\SeasonController;
@@ -30,6 +31,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('seasons/{season}/players/{player}', [SeasonController::class, 'detachPlayer'])->name('seasons.players.detach');
         Route::post('seasons/{season}/teams', [TeamController::class, 'store'])->name('seasons.teams.store');
         Route::delete('seasons/{season}/teams/{team}', [TeamController::class, 'destroy'])->name('seasons.teams.destroy');
+
+        Route::get('matches', MatchupIndexController::class)->name('matches.index');
 
         Route::post('seasons/{season}/matches', [MatchupController::class, 'storeForSeason'])->name('seasons.matches.store');
         Route::post('seasons/{season}/matches/generate', [MatchupController::class, 'generateSchedule'])->name('seasons.matches.generate');

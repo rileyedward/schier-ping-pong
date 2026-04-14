@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, CalendarRange, FolderGit2, LayoutGrid, Trophy, Users } from 'lucide-vue-next';
+import { BookOpen, CalendarRange, FolderGit2, LayoutGrid, Swords, Trophy, Users } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -37,6 +37,11 @@ const mainNavItems: NavItem[] = [
         title: 'Seasons',
         href: '/admin/seasons',
         icon: CalendarRange,
+    },
+    {
+        title: 'Matches',
+        href: '/admin/matches',
+        icon: Swords,
     },
 ];
 
