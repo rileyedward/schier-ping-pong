@@ -456,7 +456,12 @@ function submitFriendly() {
 
             <!-- Top players -->
             <Card>
-                <CardHeader><CardTitle>Top players this week</CardTitle></CardHeader>
+                <CardHeader>
+                    <CardTitle>Top players this week</CardTitle>
+                    <div data-slot="card-action">
+                        <Link href="/players" class="text-xs text-neutral-500 hover:underline">View all →</Link>
+                    </div>
+                </CardHeader>
                 <CardContent>
                     <p v-if="!topPlayers.length" class="text-sm text-neutral-500">No players yet.</p>
                     <ol class="space-y-2">
@@ -470,7 +475,9 @@ function submitFriendly() {
                                 {{ initials(p.first_name + ' ' + p.last_name) }}
                             </div>
                             <div class="flex-1">
-                                <div class="text-sm font-medium">{{ p.first_name }} {{ p.last_name }}</div>
+                                <Link :href="`/players/${p.id}`" class="text-sm font-medium hover:underline">
+                                    {{ p.first_name }} {{ p.last_name }}
+                                </Link>
                                 <div class="text-xs text-neutral-500">Rating {{ p.rating }}</div>
                             </div>
                             <span class="text-sm font-semibold">{{ p.wins_this_week }} W</span>
