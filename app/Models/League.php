@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'description', 'skill_level'])]
+#[Fillable(['name', 'description', 'skill_level', 'color'])]
 class League extends Model
 {
     /** @use HasFactory<LeagueFactory> */

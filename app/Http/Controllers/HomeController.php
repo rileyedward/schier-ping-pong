@@ -71,6 +71,7 @@ class HomeController extends Controller
                 return [
                     'id' => $league->id,
                     'name' => $league->name,
+                    'color' => $league->color,
                     'seasons' => $league->seasons->map(function ($season) {
                         if ($season->isDoubles()) {
                             $matches = $season->matches()->whereNotNull('winner_team_id')->get();

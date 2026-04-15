@@ -40,36 +40,57 @@ const PAD = { top: 16, right: 16, bottom: 32, left: 48 };
 
 const allPoints = computed(() => {
     const pts: { date: string; rating: number }[] = [];
-    if (chartLine.value !== 'friendly') pts.push(...props.leagueHistory);
-    if (chartLine.value !== 'league') pts.push(...props.friendlyHistory);
+
+    if (chartLine.value !== 'friendly') {
+pts.push(...props.leagueHistory);
+}
+
+    if (chartLine.value !== 'league') {
+pts.push(...props.friendlyHistory);
+}
+
     return pts;
 });
 
 const dateToX = computed(() => {
     const all = allPoints.value;
-    if (!all.length) return () => PAD.left;
+
+    if (!all.length) {
+return () => PAD.left;
+}
+
     const dates = all.map((p) => p.date).sort();
     const minD = dates[0];
     const maxD = dates[dates.length - 1];
     const span = minD === maxD ? 1 : new Date(maxD).getTime() - new Date(minD).getTime();
+
     return (date: string) => {
         const t = new Date(date).getTime() - new Date(minD).getTime();
+
         return PAD.left + (t / span) * (W - PAD.left - PAD.right);
     };
 });
 
 const ratingToY = computed(() => {
     const all = allPoints.value;
-    if (!all.length) return () => H / 2;
+
+    if (!all.length) {
+return () => H / 2;
+}
+
     const ratings = all.map((p) => p.rating);
     const minR = Math.min(...ratings) - 30;
     const maxR = Math.max(...ratings) + 30;
     const span = maxR - minR || 1;
+
     return (r: number) => PAD.top + (1 - (r - minR) / span) * (H - PAD.top - PAD.bottom);
 });
 
 function toPolyline(points: RatingPoint[]) {
-    if (!points.length) return '';
+    if (!points.length) {
+return '';
+}
+
     return points
         .map((p) => `${dateToX.value(p.date).toFixed(1)},${ratingToY.value(p.rating).toFixed(1)}`)
         .join(' ');
@@ -81,23 +102,40 @@ const friendlyLine = computed(() => toPolyline(props.friendlyHistory));
 // Y-axis tick labels
 const yTicks = computed(() => {
     const all = allPoints.value;
-    if (!all.length) return [1000];
+
+    if (!all.length) {
+return [1000];
+}
+
     const ratings = all.map((p) => p.rating);
     const minR = Math.min(...ratings) - 30;
     const maxR = Math.max(...ratings) + 30;
     const step = Math.ceil((maxR - minR) / 4 / 10) * 10;
     const ticks: number[] = [];
-    for (let v = Math.floor(minR / 10) * 10; v <= maxR; v += step) ticks.push(v);
+
+    for (let v = Math.floor(minR / 10) * 10; v <= maxR; v += step) {
+ticks.push(v);
+}
+
     return ticks;
 });
 
 // X-axis tick labels (up to 5 dates)
 const xTicks = computed(() => {
     const all = allPoints.value;
-    if (!all.length) return [];
+
+    if (!all.length) {
+return [];
+}
+
     const dates = [...new Set(all.map((p) => p.date))].sort();
-    if (dates.length <= 5) return dates;
+
+    if (dates.length <= 5) {
+return dates;
+}
+
     const step = Math.floor(dates.length / 4);
+
     return [dates[0], dates[step], dates[step * 2], dates[step * 3], dates[dates.length - 1]];
 });
 
@@ -113,14 +151,15 @@ const initials = (name: string) =>
 
 <template>
     <Head :title="player.name" />
-    <div class="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-        <header class="border-b bg-white dark:bg-neutral-900">
-            <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+    <div class="min-h-screen text-neutral-900" style="background-color: #f4f1ea">
+        <header class="bg-white">
+            <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
                 <div class="flex items-center gap-3">
                     <Link href="/players" class="text-sm text-neutral-500 hover:underline">← Players</Link>
-                    <h1 class="text-xl font-semibold">{{ player.name }}</h1>
+                    <h1 class="text-xl font-semibold tracking-wide">{{ player.name }}</h1>
                 </div>
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 text-sm font-semibold dark:bg-neutral-700">
+                <!-- TODO: replace placeholder with player profile image -->
+                <div class="flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold text-white" style="background-color: #3b8ab0">
                     {{ initials(player.name) }}
                 </div>
             </div>

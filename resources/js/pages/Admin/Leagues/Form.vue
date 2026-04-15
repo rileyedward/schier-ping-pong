@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/InputError.vue';
 
-type League = { id: number; name: string; description: string | null; skill_level: string | null } | null;
+type League = { id: number; name: string; description: string | null; skill_level: string | null; color: string | null } | null;
 
 const props = defineProps<{ league: League }>();
 
@@ -17,6 +17,7 @@ const form = useForm({
     name: props.league?.name ?? '',
     description: props.league?.description ?? '',
     skill_level: props.league?.skill_level ?? '',
+    color: props.league?.color ?? '#3f9c6b',
 });
 
 defineOptions({
@@ -30,8 +31,11 @@ defineOptions({
 });
 
 function submit() {
-    if (isEdit.value) form.put(`/admin/leagues/${props.league!.id}`);
-    else form.post('/admin/leagues');
+    if (isEdit.value) {
+form.put(`/admin/leagues/${props.league!.id}`);
+} else {
+form.post('/admin/leagues');
+}
 }
 </script>
 
@@ -54,6 +58,14 @@ function submit() {
                         <Label for="skill_level">Skill level</Label>
                         <Input id="skill_level" v-model="form.skill_level" placeholder="e.g. Beginner, A Division" />
                         <InputError :message="form.errors.skill_level" />
+                    </div>
+                    <div>
+                        <Label for="color">Color</Label>
+                        <div class="flex items-center gap-2">
+                            <input id="color" type="color" v-model="form.color" class="h-9 w-14 cursor-pointer rounded-md border bg-transparent" />
+                            <Input v-model="form.color" placeholder="#3f9c6b" class="max-w-32" />
+                        </div>
+                        <InputError :message="form.errors.color" />
                     </div>
                     <div>
                         <Label for="description">Description</Label>
