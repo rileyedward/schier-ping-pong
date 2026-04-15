@@ -264,7 +264,7 @@ function dateLabel(m: MatchRow): { text: string; pending: boolean } {
                                     <span>{{ dateLabel(m).text }}</span>
                                     <span
                                         v-if="dateLabel(m).pending"
-                                        class="ml-1 rounded-full bg-yellow-100 px-1.5 py-0.5 text-[10px] text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                                        class="ml-1 rounded-full bg-yellow-100 px-1.5 py-0.5 text-[10px] text-yellow-700"
                                     >sched</span>
                                 </td>
                                 <td class="py-2 pr-4 capitalize">{{ m.type }}</td>
@@ -286,7 +286,7 @@ function dateLabel(m: MatchRow): { text: string; pending: boolean } {
                                     <span v-else class="text-muted-foreground">—</span>
                                 </td>
                                 <td class="py-2 pr-4">
-                                    <span v-if="winnerLabel(m) !== '—'" class="text-emerald-600 dark:text-emerald-400">
+                                    <span v-if="winnerLabel(m) !== '—'" class="text-emerald-600">
                                         {{ winnerLabel(m) }}
                                     </span>
                                     <span v-else class="text-muted-foreground">—</span>
