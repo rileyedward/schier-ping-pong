@@ -65,7 +65,8 @@ onMounted(() => {
                     Enter Access Code
                 </h1>
                 <p class="mt-1 text-sm text-gray-500">
-                    Enter the 4-digit code to continue
+                    I require a super secret passcode to access this page. Only
+                    the coolest of the cool are allowed here.
                 </p>
             </div>
 
