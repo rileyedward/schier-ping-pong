@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Pencil, UserMinus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PlayerPicker from '@/components/PlayerPicker.vue';
 
 type League = { id: number; name: string; description: string | null; skill_level: string | null };
 type PlayerLite = { id: number; first_name: string; last_name: string; email?: string };
@@ -16,7 +17,7 @@ const props = defineProps<{
     seasons: SeasonLite[];
 }>();
 
-const selected = ref<number | ''>('');
+const selected = ref<number>(0);
 
 defineOptions({
     layout: {
@@ -30,7 +31,7 @@ defineOptions({
 function attach() {
     if (!selected.value) return;
     router.post(`/admin/leagues/${props.league.id}/players`, { player_id: selected.value }, {
-        onSuccess: () => (selected.value = ''),
+        onSuccess: () => (selected.value = 0),
     });
 }
 
@@ -62,12 +63,14 @@ function detach(playerId: number) {
             </CardHeader>
             <CardContent>
                 <div class="mb-4 flex items-center gap-2">
-                    <select v-model="selected" class="h-9 rounded-md border bg-transparent px-2 text-sm">
-                        <option value="">Add player…</option>
-                        <option v-for="p in availablePlayers" :key="p.id" :value="p.id">
-                            {{ p.first_name }} {{ p.last_name }}
-                        </option>
-                    </select>
+                    <div class="flex-1 max-w-sm">
+                        <PlayerPicker
+                            v-model="selected"
+                            :players="availablePlayers"
+                            label="Add player to league"
+                            placeholder="Add player…"
+                        />
+                    </div>
                     <Button size="sm" :disabled="!selected" @click="attach">Add</Button>
                 </div>
                 <ul class="divide-y text-sm">

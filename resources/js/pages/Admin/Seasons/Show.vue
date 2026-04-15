@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import MatchScoreDialog from '@/components/MatchScoreDialog.vue';
+import PlayerPicker from '@/components/PlayerPicker.vue';
 
 type PlayerLite = { id: number; first_name: string; last_name: string; email?: string };
 type TeamPlayer = { id: number; name: string };
@@ -47,7 +48,7 @@ const props = defineProps<{
 
 const isDoubles = computed(() => props.season.format === 'doubles');
 
-const selected = ref<number | ''>('');
+const selected = ref<number>(0);
 const editingId = ref<number | null>(null);
 const showNewMatch = ref(false);
 const scoringMatch = ref<Match | null>(null);
@@ -94,7 +95,7 @@ defineOptions({
 function attach() {
     if (!selected.value) return;
     router.post(`/admin/seasons/${props.season.id}/players`, { player_id: selected.value }, {
-        onSuccess: () => (selected.value = ''),
+        onSuccess: () => (selected.value = 0),
     });
 }
 
@@ -206,17 +207,21 @@ function removeTeam(id: number) {
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <Label class="text-xs">Player 1</Label>
-                            <select v-model.number="newTeam.player_ids[0]" class="h-9 w-full rounded-md border bg-transparent px-2 text-sm">
-                                <option :value="0">—</option>
-                                <option v-for="p in roster" :key="p.id" :value="p.id">{{ p.first_name }} {{ p.last_name }}</option>
-                            </select>
+                            <PlayerPicker
+                                v-model="newTeam.player_ids[0]"
+                                :players="roster"
+                                label="Team · Player 1"
+                                :exclude="newTeam.player_ids[1] ? [newTeam.player_ids[1]] : []"
+                            />
                         </div>
                         <div>
                             <Label class="text-xs">Player 2</Label>
-                            <select v-model.number="newTeam.player_ids[1]" class="h-9 w-full rounded-md border bg-transparent px-2 text-sm">
-                                <option :value="0">—</option>
-                                <option v-for="p in roster" :key="p.id" :value="p.id">{{ p.first_name }} {{ p.last_name }}</option>
-                            </select>
+                            <PlayerPicker
+                                v-model="newTeam.player_ids[1]"
+                                :players="roster"
+                                label="Team · Player 2"
+                                :exclude="newTeam.player_ids[0] ? [newTeam.player_ids[0]] : []"
+                            />
                         </div>
                     </div>
                     <InputError :message="newTeam.errors.player_ids" />
@@ -245,12 +250,14 @@ function removeTeam(id: number) {
                 </CardHeader>
                 <CardContent>
                     <div class="mb-4 flex items-center gap-2">
-                        <select v-model="selected" class="h-9 flex-1 rounded-md border bg-transparent px-2 text-sm">
-                            <option value="">Add player…</option>
-                            <option v-for="p in availablePlayers" :key="p.id" :value="p.id">
-                                {{ p.first_name }} {{ p.last_name }}
-                            </option>
-                        </select>
+                        <div class="flex-1">
+                            <PlayerPicker
+                                v-model="selected"
+                                :players="availablePlayers"
+                                label="Add player to season"
+                                placeholder="Add player…"
+                            />
+                        </div>
                         <Button size="sm" :disabled="!selected" @click="attach">Add</Button>
                     </div>
                     <ul class="divide-y text-sm">

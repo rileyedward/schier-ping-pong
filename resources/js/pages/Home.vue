@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import PlayerPicker from '@/components/PlayerPicker.vue';
 import { dashboard, login } from '@/routes';
 
 type PlayerSummary = { id: number; name: string; initials: string };
@@ -372,18 +373,24 @@ return '#6b7280';
                                     </select>
                                 </template>
                                 <template v-else>
-                                    <select v-model.number="winnerOneId" class="h-9 flex-1 rounded-md bg-white/90 px-2 text-neutral-900">
-                                        <option :value="0">Player 1</option>
-                                        <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                    </select>
-                                    <select
-                                        v-if="isDoubles"
-                                        v-model.number="winnerTwoId"
-                                        class="h-9 flex-1 rounded-md bg-white/90 px-2 text-neutral-900"
-                                    >
-                                        <option :value="0">Player 2 (if doubles)</option>
-                                        <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                    </select>
+                                    <div class="flex-1">
+                                        <PlayerPicker
+                                            v-model="winnerOneId"
+                                            :players="allPlayers"
+                                            label="Winner"
+                                            placeholder="Player 1"
+                                            :exclude="[winnerTwoId, loserOneId, loserTwoId].filter(Boolean)"
+                                        />
+                                    </div>
+                                    <div v-if="isDoubles" class="flex-1">
+                                        <PlayerPicker
+                                            v-model="winnerTwoId"
+                                            :players="allPlayers"
+                                            label="Winner — partner"
+                                            placeholder="Player 2 (doubles)"
+                                            :exclude="[winnerOneId, loserOneId, loserTwoId].filter(Boolean)"
+                                        />
+                                    </div>
                                 </template>
                             </div>
                         </div>
@@ -393,18 +400,24 @@ return '#6b7280';
                             <div class="text-right">Loser(s)</div>
                             <div class="flex gap-2">
                                 <template v-if="matchContext === 'friendly'">
-                                    <select v-model.number="loserOneId" class="h-9 flex-1 rounded-md bg-white/90 px-2 text-neutral-900">
-                                        <option :value="0">Player 1</option>
-                                        <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                    </select>
-                                    <select
-                                        v-if="isDoubles"
-                                        v-model.number="loserTwoId"
-                                        class="h-9 flex-1 rounded-md bg-white/90 px-2 text-neutral-900"
-                                    >
-                                        <option :value="0">Player 2 (if doubles)</option>
-                                        <option v-for="p in allPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                    </select>
+                                    <div class="flex-1">
+                                        <PlayerPicker
+                                            v-model="loserOneId"
+                                            :players="allPlayers"
+                                            label="Loser"
+                                            placeholder="Player 1"
+                                            :exclude="[winnerOneId, winnerTwoId, loserTwoId].filter(Boolean)"
+                                        />
+                                    </div>
+                                    <div v-if="isDoubles" class="flex-1">
+                                        <PlayerPicker
+                                            v-model="loserTwoId"
+                                            :players="allPlayers"
+                                            label="Loser — partner"
+                                            placeholder="Player 2 (doubles)"
+                                            :exclude="[winnerOneId, winnerTwoId, loserOneId].filter(Boolean)"
+                                        />
+                                    </div>
                                 </template>
                                 <div v-else class="flex-1 text-xs text-white/70 italic">
                                     (auto — whichever side isn't the winner)
