@@ -7,9 +7,13 @@ use App\Http\Controllers\Admin\PlayerController as AdminPlayerController;
 use App\Http\Controllers\Admin\SeasonController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PasscodeController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PublicMatchController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/unlock', [PasscodeController::class, 'show'])->name('unlock');
+Route::post('/unlock', [PasscodeController::class, 'verify'])->name('unlock.verify');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('players', [PlayerController::class, 'index'])->name('players.index');
