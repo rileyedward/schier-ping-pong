@@ -60,7 +60,7 @@ class ApplyMatchRating
                     'rating_before' => $winnerBefore,
                     'rating_after' => $winnerAfter,
                     'delta' => $delta,
-                    'created_at' => now(),
+                    'created_at' => $match->played_at ?? now(),
                 ],
                 [
                     'player_id' => $loser->id,
@@ -69,7 +69,7 @@ class ApplyMatchRating
                     'rating_before' => $loserBefore,
                     'rating_after' => $loserAfter,
                     'delta' => -$delta,
-                    'created_at' => now(),
+                    'created_at' => $match->played_at ?? now(),
                 ],
             ]);
         });
@@ -112,7 +112,7 @@ class ApplyMatchRating
                     'rating_before' => $before,
                     'rating_after' => $after,
                     'delta' => $delta,
-                    'created_at' => now(),
+                    'created_at' => $match->played_at ?? now(),
                 ];
             }
 
@@ -128,7 +128,7 @@ class ApplyMatchRating
                     'rating_before' => $before,
                     'rating_after' => $after,
                     'delta' => -$delta,
-                    'created_at' => now(),
+                    'created_at' => $match->played_at ?? now(),
                 ];
             }
 
